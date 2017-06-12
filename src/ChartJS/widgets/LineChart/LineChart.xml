@@ -108,6 +108,31 @@
                 <enumerationValue key="easeInOutBounce">easeInOutBounce</enumerationValue>
             </enumerationValues>
         </property>
+
+
+        <!-- Real Time Updates -->
+        <property key="realtimedataset" type="entity" allowNonPersistableEntities="true" entityProperty="sourceentity" isPath="yes" pathType="referenceSet">
+            <caption>Real Time Dataset</caption>
+            <category>Real Time Updates</category>
+            <description>Datasets which need to be updated</description>
+        </property>
+
+        <property key="realtimedatapoints" type="entity" allowNonPersistableEntities="true" entityProperty="datasetentity" isPath="yes" pathType="referenceSet">
+            <caption>Real Time Data Points</caption>
+            <category>Real Time Updates</category>
+            <description>Data Points which need to be updated</description>
+        </property>
+
+        <property key="justUpdate" type="attribute" entityProperty="sourceentity" allowNonPersistableEntities="true">
+            <caption>justUpdate</caption>
+            <category>Real Time Updates</category>
+            <description>if true then do not redraw the chart but check for new points. if false work same as before</description>
+            <attributeTypes>
+                <attributeType name="Boolean"/>
+            </attributeTypes>
+        </property>
+
+
         <!-- Data Source -->
         <property key="sourceentity" type="entity" required="true" allowNonPersistableEntities="true">
             <caption>Chart Entity</caption>

@@ -163,56 +163,92 @@ define([
             this._executeCallback(callback, "update");
         },
 
+        datasetRealtime: function (dataset, datapoints) {
+          console.log(dataset);
+          console.log(datapoints);
+        },
+
         _loadData: function () {
             logger.debug(this.id + "._loadData");
-            this._data = {
-                object: this._mxObj,
-                datasets: []
-            };
+
 
             this._executeMicroflow(this.datasourcemf, lang.hitch(this, function (objs) {
                 if (objs && objs.length > 0) {
-                    var obj = objs[0], // Chart object is always only one.
-                        j = null,
-                        dataset = null,
-                        pointguids = null,
-                        guids = obj.get(this._dataset);
+                    var obj = objs[0]; // Chart object is always only one.
 
-                    this._data.object = obj;
-                    this._data.datasets = [];
 
-                    if (!guids) {
-                        logger.warn(this.id + "._loadData failed, no _dataset. Not rendering Chart");
-                        return;
+                    if ( this.justUpdate && this.realtimedataset && this.realtimedatapoints && obj.get(this.justUpdate) ) {
+                             var realtimedatasets = obj.get(this.realtimedataset.split("/")[0]);
+                             // Retrieve datasets
+                             mx.data.get({
+                                 guids: guids,
+                                 callback: lang.hitch(this, function (datasets) {
+                                   for (j = 0; j < datasets.length; j++) {
+                                       dataset = datasets[j];
+                                       pointguids = dataset.get(this.realtimedatapoints.split("/")[0]);
+                                       if (typeof pointguids === "string" && pointguids !== "") {
+                                           pointguids = [pointguids];
+                                       }
+                                       if (typeof pointguids !== "string") {
+                                           mx.data.get({
+                                               guids: pointguids,
+                                               callback: lang.hitch(this, this.datasetRealtime, dataset)
+                                           });
+                                       } else {
+                                           this.datasetAdd(datasetRealtime, []);
+                                       }
+                                   }
+
+                               })
+                             });
                     }
+                    else {
+                        this._data = {
+                            object: this._mxObj,
+                            datasets: []
+                        };
 
-                    // Retrieve datasets
-                    mx.data.get({
-                        guids: guids,
-                        callback: lang.hitch(this, function (datasets) {
-                            var set = {};
+                        var j = null,
+                            dataset = null,
+                            pointguids = null,
+                            guids = obj.get(this._dataset);
 
-                            this._datasetCounter = datasets.length;
-                            this._data.datasets = [];
+                        this._data.object = obj;
+                        this._data.datasets = [];
 
-                            for (j = 0; j < datasets.length; j++) {
-                                dataset = datasets[j];
-                                pointguids = dataset.get(this._datapoint);
-                                if (typeof pointguids === "string" && pointguids !== "") {
-                                    pointguids = [pointguids];
+                        if (!guids) {
+                            logger.warn(this.id + "._loadData failed, no _dataset. Not rendering Chart");
+                            return;
+                        }
+
+                        // Retrieve datasets
+                        mx.data.get({
+                            guids: guids,
+                            callback: lang.hitch(this, function (datasets) {
+                                var set = {};
+
+                                this._datasetCounter = datasets.length;
+                                this._data.datasets = [];
+
+                                for (j = 0; j < datasets.length; j++) {
+                                    dataset = datasets[j];
+                                    pointguids = dataset.get(this._datapoint);
+                                    if (typeof pointguids === "string" && pointguids !== "") {
+                                        pointguids = [pointguids];
+                                    }
+                                    if (typeof pointguids !== "string") {
+                                        mx.data.get({
+                                            guids: pointguids,
+                                            callback: lang.hitch(this, this.datasetAdd, dataset)
+                                        });
+                                    } else {
+                                        this.datasetAdd(dataset, []);
+                                    }
                                 }
-                                if (typeof pointguids !== "string") {
-                                    mx.data.get({
-                                        guids: pointguids,
-                                        callback: lang.hitch(this, this.datasetAdd, dataset)
-                                    });
-                                } else {
-                                    this.datasetAdd(dataset, []);
-                                }
-                            }
 
-                        })
-                    });
+                            })
+                        });
+                    }
                 } else {
                     console.warn(this.id + "._loadData execution of microflow:" + this.datasourcemf + " has not returned any objects.");
                 }
